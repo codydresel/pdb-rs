@@ -173,6 +173,30 @@ sym_kinds! {
     0x1169, S_HOTPATCHFUNC;
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct UnknownSymKind;
+
+impl core::str::FromStr for SymKind {
+    type Err = UnknownSymKind;
+
+    /// Parses a symbol kind from string to `SymKind` value.
+    fn from_str(s: &str) -> Result<SymKind, Self::Err> {
+        if s.starts_with("S_") {
+            for &(k, name) in SYM_NAMES.iter() {
+                if name == s {
+                    return Ok(k);
+                }
+            }
+        }
+
+        if let Ok(k) = u16::from_str_radix(s, 16) {
+            return Ok(SymKind(k));
+        }
+
+        Err(UnknownSymKind)
+    }
+}
+
 impl std::fmt::Debug for SymKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Ok(index) = SYM_NAMES.binary_search_by_key(self, |ii| ii.0) {
